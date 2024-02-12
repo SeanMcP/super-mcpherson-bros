@@ -10,8 +10,9 @@ loadSound("ow", "sounds/ow.mp3");
 
 // load sprites
 loadSprite("brick", "sprites/brick.png");
+loadSprite("ezra", "sprites/ezra.png");
 loadSprite("gem", "sprites/gem.png");
-loadSprite("sam", "sprites/sam.png");
+loadSprite("sam", "sprites/sam-2.png");
 loadSprite("spikes", "sprites/spikes.png");
 
 // add
@@ -35,12 +36,13 @@ addLevel(
     "       ^^      = >    =   &",
     "===========================",
     "                           ",
+    "                           ",
     "    $                      ",
-    "    =                      ",
+    "    =      $               ",
     "           =               ",
     "                   =       ",
     "   ^^^                   ^^",
-    "==========================="
+    "===========================",
   ],
   {
     // define the size of tile block
@@ -54,12 +56,12 @@ addLevel(
     },
   }
 );
-const sam = add(["sam", sprite("sam"), health(20), pos(0, 0), area(), body()]);
+let sam = add(["sam", sprite("sam"), health(3), pos(0, 0), area(), body()]);
+sam._current = "sam";
 
 setGravity(1600);
 
 onCollide("sam", "spikes", (sam) => {
-  play("ow");
   sam.hurt(1);
 });
 
@@ -72,12 +74,24 @@ onCollide("sam", "gem", (_, gem) => {
 });
 
 sam.on("hurt", () => {
+  play("ow");
   console.log("Ouch!");
 });
 
 sam.on("death", () => {
   console.log("Game Over!");
   destroy(sam);
+
+  const gameOver = add([
+    text("Game Over!"),
+    pos(width() / 2, height() / 2),
+    // origin("center"),
+  ]);
+
+  onKeyPress("r", () => {
+    sam = add(["sam", sprite("sam"), health(3), pos(0, 0), area(), body()]);
+    destroy(gameOver);
+  });
 });
 
 // on key events
@@ -93,4 +107,14 @@ onKeyDown("right", () => {
 
 onKeyDown("left", () => {
   sam.move(-400, 0);
+});
+
+onKeyPress("shift", () => {
+  if (sam._current === "sam") {
+    sam.use(sprite("ezra"));
+    sam._current = "ezra";
+  } else {
+    sam.use(sprite("sam"));
+    sam._current = "sam";
+  }
 });
