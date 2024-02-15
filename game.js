@@ -10,6 +10,7 @@ loadSound("ow", "sounds/ow.mp3");
 
 // load sprites
 loadSprite("brick", "sprites/brick.png");
+loadSprite("bad-ball", "sprites/bad-ball.png");
 loadSprite("ezra", "sprites/ezra.png");
 loadSprite("gem", "sprites/gem.png");
 loadSprite("sam", "sprites/sam-2.png");
@@ -17,6 +18,39 @@ loadSprite("spikes", "sprites/spikes.png");
 
 // add
 setBackground(200, 200, 200);
+
+function enemy() {
+  return {
+    id: "enemy",
+    require: ["pos", "area", "body", "sprite"],
+    isAlive: true,
+    moveCount: 0,
+    direction: "right",
+    update() {
+      if (!this.isAlive) {
+        return;
+      }
+
+      // move left and right on a 2000 space patrol
+      this.moveCount++;
+      if (this.moveCount % 100 === 0) {
+        this.direction = this.direction === "right" ? "left" : "right";
+        this.moveCount = 0;
+      }
+      if (this.direction === "right") {
+        this.move(100, 0);
+      } else {
+        this.move(-100, 0);
+      }
+    },
+    squash() {
+      burp();
+      this.isAlive = false;
+      this.stop();
+      destroy(this);
+    }
+  }
+}
 
 const score = add([
   text("Score: 0"),
@@ -33,7 +67,7 @@ addLevel(
     "           $$         =   $",
     "  %      ====         =   $",
     "                      =    ",
-    "       ^^      = >    =   &",
+    "       ^^      = 0    =   &",
     "===========================",
     "                           ",
     "                           ",
@@ -41,7 +75,7 @@ addLevel(
     "    =      $               ",
     "           =               ",
     "                   =       ",
-    "   ^^^                   ^^",
+    "   ^^^             0     ^^",
     "===========================",
     "                           ",
     "                   $       ",
@@ -49,7 +83,7 @@ addLevel(
     "    =      $   =           ",
     "           =       $       ",
     "                   =       ",
-    "^^^^^^                ^^^^^",
+    "^^^^^^      $$$$      ^^^^^",
     "===========================",
   ],
   {
@@ -60,7 +94,8 @@ addLevel(
     tiles: {
       "=": () => [sprite("brick"), area(), body({ isStatic: true })],
       $: () => ["gem", sprite("gem"), area(), pos(0, -9)],
-      "^": () => [sprite("spikes"), area(), "spikes"],
+      "^": () => [sprite("spikes"), area(), "ouch"],
+      "0": () => [sprite("bad-ball"), area(), "ouch", body(), enemy()],
     },
   }
 );
@@ -68,13 +103,6 @@ const player = add(["player", sprite("sam"), health(3), pos(0, 0), area(), body(
 player._current = "sam";
 
 setGravity(1600);
-
-onCollide("player", "spikes", (player) => {
-  if (player._current === "ezra") {
-    return;
-  }
-  player.hurt(1);
-});
 
 onCollide("player", "gem", (_, gem) => {
   play("ding");
@@ -99,10 +127,30 @@ player.on("death", () => {
   ]);
 });
 
+let canSquash = false;
+
+onUpdate(() => {
+  if (player.isGrounded()) {
+    canSquash = false;
+  }
+});
+
+onCollide("player", "ouch", (_, ouch) => {
+  if (ouch.isAlive && canSquash && ouch.squash) {
+    ouch.squash();
+  } else {
+    if (player._current === "ezra") {
+      return;
+    }
+    player.hurt(1);
+  }
+})
+
 // on key events
 onKeyPress("space", () => {
   if (player._current === "sam" && player.isGrounded()) {
     player.jump();
+    canSquash = true;
   }
 });
 
