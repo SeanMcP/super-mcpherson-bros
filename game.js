@@ -43,6 +43,14 @@ addLevel(
     "                   =       ",
     "   ^^^                   ^^",
     "===========================",
+    "                           ",
+    "                   $       ",
+    "    $              =       ",
+    "    =      $   =           ",
+    "           =       $       ",
+    "                   =       ",
+    "^^^^^^                ^^^^^",
+    "===========================",
   ],
   {
     // define the size of tile block
@@ -56,16 +64,19 @@ addLevel(
     },
   }
 );
-let sam = add(["sam", sprite("sam"), health(3), pos(0, 0), area(), body()]);
-sam._current = "sam";
+const player = add(["player", sprite("sam"), health(3), pos(0, 0), area(), body()]);
+player._current = "sam";
 
 setGravity(1600);
 
-onCollide("sam", "spikes", (sam) => {
-  sam.hurt(1);
+onCollide("player", "spikes", (player) => {
+  if (player._current === "ezra") {
+    return;
+  }
+  player.hurt(1);
 });
 
-onCollide("sam", "gem", (_, gem) => {
+onCollide("player", "gem", (_, gem) => {
   play("ding");
   console.log("You got a gem!");
   score.value++;
@@ -73,48 +84,43 @@ onCollide("sam", "gem", (_, gem) => {
   destroy(gem);
 });
 
-sam.on("hurt", () => {
+player.on("hurt", () => {
   play("ow");
   console.log("Ouch!");
 });
 
-sam.on("death", () => {
+player.on("death", () => {
   console.log("Game Over!");
-  destroy(sam);
+  destroy(player);
 
-  const gameOver = add([
+  add([
     text("Game Over!"),
     pos(width() / 2, height() / 2),
-    // origin("center"),
   ]);
-
-  onKeyPress("r", () => {
-    sam = add(["sam", sprite("sam"), health(3), pos(0, 0), area(), body()]);
-    destroy(gameOver);
-  });
 });
 
 // on key events
 onKeyPress("space", () => {
-  if (sam.isGrounded()) {
-    sam.jump();
+  if (player._current === "sam" && player.isGrounded()) {
+    player.jump();
   }
 });
 
 onKeyDown("right", () => {
-  sam.move(400, 0);
+  player.move(400, 0);
 });
 
 onKeyDown("left", () => {
-  sam.move(-400, 0);
+  player.move(-400, 0);
 });
 
+// Switch between characters
 onKeyPress("shift", () => {
-  if (sam._current === "sam") {
-    sam.use(sprite("ezra"));
-    sam._current = "ezra";
+  if (player._current === "sam") {
+    player.use(sprite("ezra"));
+    player._current = "ezra";
   } else {
-    sam.use(sprite("sam"));
-    sam._current = "sam";
+    player.use(sprite("sam"));
+    player._current = "sam";
   }
 });
