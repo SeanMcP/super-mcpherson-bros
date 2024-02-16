@@ -1,5 +1,5 @@
-// import kaboom lib
-import kaboom from "./kaboom.mjs";
+/** @typedef { import("./node_modules/kaboom/dist/global") } */
+import kaboom from "./node_modules/kaboom/dist/kaboom.mjs";
 
 // initialize kaboom context
 kaboom();

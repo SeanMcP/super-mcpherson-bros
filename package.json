@@ -2,10 +2,7 @@
   "name": "super-mcpherson-bros",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "copy-kaboom": "cp node_modules/kaboom/dist/kaboom.mjs ."
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
