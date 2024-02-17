@@ -38,8 +38,10 @@ function enemy() {
         this.moveCount = 0;
       }
       if (this.direction === "right") {
+        this.flipX = false;
         this.move(100, 0);
       } else {
+        this.flipX = true;
         this.move(-100, 0);
       }
     },
@@ -155,10 +157,12 @@ onKeyPress("space", () => {
 });
 
 onKeyDown("right", () => {
+  player.flipX = false;
   player.move(400, 0);
 });
 
 onKeyDown("left", () => {
+  player.flipX = true;
   player.move(-400, 0);
 });
 
