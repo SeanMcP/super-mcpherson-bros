@@ -13,7 +13,24 @@ loadSprite("brick", "sprites/brick.png");
 loadSprite("bad-ball", "sprites/bad-ball.png");
 loadSprite("ezra", "sprites/ezra.png");
 loadSprite("gem", "sprites/gem.png");
-loadSprite("sam", "sprites/sam-2.png");
+loadSprite("sam", "sprites/sam-2.png", {
+  sliceX: 4,
+  anims: {
+    idle: {
+      from: 0,
+      to: 1,
+      speed: 5,
+      loop: true
+    },
+    run: {
+      from: 2,
+      to: 3,
+      speed: 10,
+      loop: true
+    },
+    jump: 2
+  }
+});
 loadSprite("spikes", "sprites/spikes.png");
 
 // add
@@ -103,6 +120,7 @@ addLevel(
 );
 const player = add(["player", sprite("sam"), health(3), pos(0, 0), area(), body()]);
 player._current = "sam";
+player.play("idle");
 
 setGravity(1600);
 
@@ -137,6 +155,15 @@ onUpdate(() => {
   }
 });
 
+player.onGround(() => {
+  console.log("On the ground!");
+	if (!isKeyDown("left") && !isKeyDown("right")) {
+		player.play("idle")
+	} else {
+		player.play("run")
+	}
+})
+
 onCollide("player", "ouch", (_, ouch) => {
   if (ouch.isAlive && canSquash && ouch.squash) {
     ouch.squash();
@@ -151,6 +178,7 @@ onCollide("player", "ouch", (_, ouch) => {
 // on key events
 onKeyPress("space", () => {
   if (player._current === "sam" && player.isGrounded()) {
+    player.play("jump");
     player.jump();
     canSquash = true;
   }
@@ -159,12 +187,27 @@ onKeyPress("space", () => {
 onKeyDown("right", () => {
   player.flipX = false;
   player.move(400, 0);
+  if (player.isGrounded() && player.curAnim() !== "run") {
+		player.play("run")
+	}
 });
 
 onKeyDown("left", () => {
   player.flipX = true;
   player.move(-400, 0);
+  if (player.isGrounded() && player.curAnim() !== "run") {
+		player.play("run")
+	}
 });
+
+;["left", "right"].forEach((key) => {
+	onKeyRelease(key, () => {
+	// Only reset to "idle" if player is not holding any of these keys
+		if (player.isGrounded() && !isKeyDown("left") && !isKeyDown("right")) {
+			player.play("idle")
+		}
+	})
+})
 
 // Switch between characters
 onKeyPress("shift", () => {
