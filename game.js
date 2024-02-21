@@ -12,6 +12,17 @@ loadSound("ow", "sounds/ow.mp3");
 loadSprite("brick", "sprites/brick.png");
 loadSprite("bad-ball", "sprites/bad-ball.png");
 loadSprite("ezra", "sprites/ezra.png");
+loadSprite("flying-fish", "sprites/flying-fish.png", {
+  sliceX: 2,
+  anims: {
+    fly: {
+      from: 0,
+      to: 1,
+      speed: 5,
+      loop: true,
+    },
+  },
+});
 loadSprite("gem", "sprites/gem.png");
 loadSprite("sam", "sprites/sam-2.png", {
   sliceX: 4,
@@ -20,16 +31,16 @@ loadSprite("sam", "sprites/sam-2.png", {
       from: 0,
       to: 1,
       speed: 5,
-      loop: true
+      loop: true,
     },
     run: {
       from: 2,
       to: 3,
       speed: 10,
-      loop: true
+      loop: true,
     },
-    jump: 2
-  }
+    jump: 2,
+  },
 });
 loadSprite("spikes", "sprites/spikes.png");
 
@@ -67,8 +78,8 @@ function enemy() {
       this.isAlive = false;
       this.stop();
       destroy(this);
-    }
-  }
+    },
+  };
 }
 
 const score = add([
@@ -81,7 +92,7 @@ const score = add([
 
 addLevel(
   [
-    "                          $",
+    "                      F   $",
     "                          $",
     "           $$         =   $",
     "  %      ====         =   $",
@@ -92,7 +103,7 @@ addLevel(
     "                           ",
     "    $                      ",
     "    =      $               ",
-    "           =               ",
+    "           =       ^       ",
     "                   =       ",
     "   ^^^             0     ^^",
     "===========================",
@@ -114,11 +125,28 @@ addLevel(
       "=": () => [sprite("brick"), area(), body({ isStatic: true })],
       $: () => ["gem", sprite("gem"), area(), pos(0, -9)],
       "^": () => [sprite("spikes"), area(), "ouch"],
-      "0": () => [sprite("bad-ball"), area(), "ouch", body(), enemy()],
+      0: () => [sprite("bad-ball"), area(), "ouch", body(), enemy()],
+      F: () => [
+        sprite("flying-fish", { anim: "fly" }),
+        area(),
+        "ouch",
+        body({
+          gravityScale: 0,
+        }),
+        enemy(),
+        "flying-fish",
+      ],
     },
   }
 );
-const player = add(["player", sprite("sam"), health(3), pos(0, 0), area(), body()]);
+const player = add([
+  "player",
+  sprite("sam"),
+  health(3),
+  pos(0, 0),
+  area(),
+  body(),
+]);
 player._current = "sam";
 player.play("idle");
 
@@ -141,10 +169,7 @@ player.on("death", () => {
   console.log("Game Over!");
   destroy(player);
 
-  add([
-    text("Game Over!"),
-    pos(width() / 2, height() / 2),
-  ]);
+  add([text("Game Over!"), pos(width() / 2, height() / 2)]);
 });
 
 let canSquash = false;
@@ -157,12 +182,12 @@ onUpdate(() => {
 
 player.onGround(() => {
   console.log("On the ground!");
-	if (!isKeyDown("left") && !isKeyDown("right")) {
-		player.play("idle")
-	} else {
-		player.play("run")
-	}
-})
+  if (!isKeyDown("left") && !isKeyDown("right")) {
+    player.play("idle");
+  } else {
+    player.play("run");
+  }
+});
 
 onCollide("player", "ouch", (_, ouch) => {
   if (ouch.isAlive && canSquash && ouch.squash) {
@@ -173,7 +198,7 @@ onCollide("player", "ouch", (_, ouch) => {
     }
     player.hurt(1);
   }
-})
+});
 
 // on key events
 onKeyPress("space", () => {
@@ -188,26 +213,26 @@ onKeyDown("right", () => {
   player.flipX = false;
   player.move(400, 0);
   if (player.isGrounded() && player.curAnim() !== "run") {
-		player.play("run")
-	}
+    player.play("run");
+  }
 });
 
 onKeyDown("left", () => {
   player.flipX = true;
   player.move(-400, 0);
   if (player.isGrounded() && player.curAnim() !== "run") {
-		player.play("run")
-	}
+    player.play("run");
+  }
 });
 
-;["left", "right"].forEach((key) => {
-	onKeyRelease(key, () => {
-	// Only reset to "idle" if player is not holding any of these keys
-		if (player.isGrounded() && !isKeyDown("left") && !isKeyDown("right")) {
-			player.play("idle")
-		}
-	})
-})
+["left", "right"].forEach((key) => {
+  onKeyRelease(key, () => {
+    // Only reset to "idle" if player is not holding any of these keys
+    if (player.isGrounded() && !isKeyDown("left") && !isKeyDown("right")) {
+      player.play("idle");
+    }
+  });
+});
 
 // Switch between characters
 onKeyPress("shift", () => {
