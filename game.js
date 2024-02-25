@@ -11,7 +11,24 @@ loadSound("ow", "sounds/ow.mp3");
 // load sprites
 loadSprite("brick", "sprites/brick.png");
 loadSprite("bad-ball", "sprites/bad-ball.png");
-loadSprite("ezra", "sprites/ezra.png");
+loadSprite("ezra", "sprites/ezra.png", {
+  sliceX: 4,
+  anims: {
+    idle: {
+      from: 0,
+      to: 1,
+      speed: 5,
+      loop: true,
+    },
+    run: {
+      from: 2,
+      to: 3,
+      speed: 10,
+      loop: true,
+    },
+    jump: 2,
+  },
+});
 loadSprite("flying-fish", "sprites/flying-fish.png", {
   sliceX: 2,
   anims: {
@@ -236,6 +253,8 @@ onKeyDown("left", () => {
 
 // Switch between characters
 onKeyPress("shift", () => {
+  const anim = player.curAnim();
+
   if (player._current === "sam") {
     player.use(sprite("ezra"));
     player._current = "ezra";
@@ -243,4 +262,6 @@ onKeyPress("shift", () => {
     player.use(sprite("sam"));
     player._current = "sam";
   }
+  
+  player.play(anim);
 });
