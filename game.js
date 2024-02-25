@@ -107,6 +107,14 @@ const score = add([
   },
 ]);
 
+const healthBar = add([
+  text("Health: 5"),
+  pos(240, 12),
+  {
+    value: 5,
+  },
+]);
+
 addLevel(
   [
     "                      F   $",
@@ -159,7 +167,7 @@ addLevel(
 const player = add([
   "player",
   sprite("sam"),
-  health(3),
+  health(healthBar.value),
   pos(0, 0),
   area(),
   body(),
@@ -206,6 +214,10 @@ player.onGround(() => {
   }
 });
 
+player.onUpdate(() => {
+  camPos(player.pos);
+});
+
 onCollide("player", "ouch", (_, ouch) => {
   if (ouch.isAlive && canSquash && ouch.squash) {
     ouch.squash();
@@ -214,6 +226,8 @@ onCollide("player", "ouch", (_, ouch) => {
       return;
     }
     player.hurt(1);
+    healthBar.value--;
+    healthBar.text = "Health: " + healthBar.value;
   }
 });
 
@@ -262,6 +276,6 @@ onKeyPress("shift", () => {
     player.use(sprite("sam"));
     player._current = "sam";
   }
-  
+
   player.play(anim);
 });
