@@ -5,12 +5,14 @@ import kaboom from "./node_modules/kaboom/dist/kaboom.mjs";
 kaboom();
 
 // load sounds
+loadSound("box-break", "sounds/box-break.wav");
 loadSound("ding", "sounds/ding.mp3");
 loadSound("ow", "sounds/ow.mp3");
 
 // load sprites
 loadSprite("brick", "sprites/brick.png");
 loadSprite("bad-ball", "sprites/bad-ball.png");
+loadSprite("box", "sprites/box.png");
 loadSprite("ezra", "sprites/ezra.png", {
   sliceX: 4,
   anims: {
@@ -122,7 +124,7 @@ addLevel(
     "           $$         =   $",
     "  %      ====         =   $",
     "                      =    ",
-    "       ^^      = 0    =   &",
+    "   B   ^^      = 0    =   &",
     "===========================",
     "                           ",
     "                           ",
@@ -147,6 +149,7 @@ addLevel(
     tileHeight: 32,
     // define what each symbol means, by a function returning a component list (what will be passed to add())
     tiles: {
+      B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
       "=": () => [sprite("brick"), area(), body({ isStatic: true })],
       $: () => ["gem", sprite("gem"), area(), pos(0, -9)],
       "^": () => [sprite("spikes"), area(), "ouch"],
@@ -228,6 +231,20 @@ onCollide("player", "ouch", (_, ouch) => {
     player.hurt(1);
     healthBar.value--;
     healthBar.text = "Health: " + healthBar.value;
+  }
+});
+
+onCollide("box", "player", (box, player) => {
+  if (player.pos.y < box.pos.y) {
+    add([
+      "gem",
+      sprite("gem"),
+      area(),
+      pos(box.pos.x + (Math.random() > 0.5 ? 50 : -50), box.pos.y),
+      "gem",
+    ]);
+    play("box-break");
+    destroy(box);
   }
 });
 
