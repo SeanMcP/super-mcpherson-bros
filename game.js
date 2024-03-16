@@ -101,6 +101,52 @@ function enemy() {
   };
 }
 
+function patrol({
+  size = 5,
+  speed = 1.0,
+  direction = "right",
+}) {
+  const banana = ["right", "left"].includes(direction) ? "x" : "y";
+  return {
+    id: "patrol",
+    require: ["pos", "area", "body", "sprite"],
+    isAlive: true,
+    direction,
+    flipDirection() {
+      console.log(this)
+      if (this.direction === "right") {
+        this.direction = "left";
+      } else if (this.direction === "left") {
+        this.direction = "right";
+      } else if (this.direction === "up") {
+        this.direction = "down";
+      } else if (this.direction === "down") {
+        this.direction = "up";
+      }
+    },
+    update() {
+      if (!this.isAlive) {
+        return;
+      }
+
+      if (this.direction === "right") {
+        this.flipX = false;
+        this.move(this.width * speed, 0);
+        if (this.pos.x > this.startingX + this.width * size) {
+          this.flipDirection();
+        }
+      } else {
+        this.flipX = true;
+        this.move(-this.width * speed, 0);
+
+        if (this.pos.x < this.startingX - this.width * size) {
+          this.flipDirection();
+        }
+      }
+    },
+  };
+}
+
 const score = add([
   text("Score: 0"),
   pos(12, 12),
@@ -119,13 +165,14 @@ const healthBar = add([
 
 addLevel(
   [
-    "                      F   $",
-    "                          $",
-    "           $$         =   $",
-    "  %      ====         =   $",
-    "                      =    ",
-    "   B   ^^      = 0    =   &",
-    "===========================",
+    "=============================",
+    "=                      F   $=",
+    "=                          $=",
+    "=           $$         =   $=",
+    "=  %      ====         =   $=",
+    "=                      =    =",
+    "=   BM  ^^      = 0    =    =",
+    "=============================",
     "                           ",
     "                           ",
     "    $                      ",
@@ -150,6 +197,13 @@ addLevel(
     // define what each symbol means, by a function returning a component list (what will be passed to add())
     tiles: {
       B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
+      M: () => [
+        "moving-platform",
+        sprite("box"),
+        area(),
+        body({ isStatic: true }),
+         patrol({size: 10, speed: 2.0}),
+      ],
       "=": () => [sprite("brick"), area(), body({ isStatic: true })],
       $: () => ["gem", sprite("gem"), area(), pos(0, -9)],
       "^": () => [sprite("spikes"), area(), "ouch"],
@@ -171,7 +225,7 @@ const player = add([
   "player",
   sprite("sam"),
   health(healthBar.value),
-  pos(0, 0),
+  pos(32, 0), 
   area(),
   body(),
 ]);
@@ -218,6 +272,13 @@ player.onGround(() => {
 });
 
 player.onUpdate(() => {
+  if (player.pos.x < 0) {
+    player.pos.x = 0;
+  }
+  // if (player.pos.x > lastFloor.pos.x) {
+  //   player.pos.x = lastFloor.pos.x;
+  // }
+  console.log(player.pos.x)
   camPos(player.pos);
 });
 
