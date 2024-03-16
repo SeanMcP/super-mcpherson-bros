@@ -62,6 +62,7 @@ loadSprite("sam", "sprites/sam-2.png", {
   },
 });
 loadSprite("spikes", "sprites/spikes.png");
+loadSprite("end-flag", "sprites/flag.png");
 
 // add
 setBackground(200, 200, 200);
@@ -101,11 +102,7 @@ function enemy() {
   };
 }
 
-function patrol({
-  size = 5,
-  speed = 1.0,
-  direction = "right",
-}) {
+function patrol({ size = 5, speed = 1.0, direction = "right" }) {
   const banana = ["right", "left"].includes(direction) ? "x" : "y";
   return {
     id: "patrol",
@@ -113,7 +110,7 @@ function patrol({
     isAlive: true,
     direction,
     flipDirection() {
-      console.log(this)
+      console.log(this);
       if (this.direction === "right") {
         this.direction = "left";
       } else if (this.direction === "left") {
@@ -171,7 +168,7 @@ addLevel(
     "=           $$         =   $=",
     "=  %      ====         =   $=",
     "=                      =    =",
-    "=   BM  ^^      = 0    =    =",
+    "=   BM  ^^      = 0    =   E=",
     "=============================",
     "                           ",
     "                           ",
@@ -202,7 +199,7 @@ addLevel(
         sprite("box"),
         area(),
         body({ isStatic: true }),
-         patrol({size: 10, speed: 2.0}),
+        patrol({ size: 10, speed: 2.0 }),
       ],
       "=": () => [sprite("brick"), area(), body({ isStatic: true })],
       $: () => ["gem", sprite("gem"), area(), pos(0, -9)],
@@ -218,6 +215,12 @@ addLevel(
         enemy(),
         "flying-fish",
       ],
+      E: () => [
+        "end-flag",
+        sprite("end-flag"),
+        area(),
+        body({ isStatic: true }),
+      ],
     },
   }
 );
@@ -225,7 +228,7 @@ const player = add([
   "player",
   sprite("sam"),
   health(healthBar.value),
-  pos(32, 0), 
+  pos(32, 0),
   area(),
   body(),
 ]);
@@ -278,7 +281,7 @@ player.onUpdate(() => {
   // if (player.pos.x > lastFloor.pos.x) {
   //   player.pos.x = lastFloor.pos.x;
   // }
-  console.log(player.pos.x)
+  console.log(player.pos.x);
   camPos(player.pos);
 });
 
@@ -307,6 +310,10 @@ onCollide("box", "player", (box, player) => {
     play("box-break");
     destroy(box);
   }
+});
+
+onCollide("player", "end-flag", () => {
+  alert("You win!");
 });
 
 // on key events
