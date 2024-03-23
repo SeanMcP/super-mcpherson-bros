@@ -1,5 +1,6 @@
 /** @typedef { import("./node_modules/kaboom/dist/global") } */
 import kaboom from "./node_modules/kaboom/dist/kaboom.mjs";
+import * as components from "./components.js";
 
 // initialize kaboom context
 kaboom();
@@ -67,83 +68,6 @@ loadSprite("end-flag", "sprites/flag.png");
 // add
 setBackground(200, 200, 200);
 
-function enemy() {
-  return {
-    id: "enemy",
-    require: ["pos", "area", "body", "sprite"],
-    isAlive: true,
-    moveCount: 0,
-    direction: "right",
-    update() {
-      if (!this.isAlive) {
-        return;
-      }
-
-      // move left and right on a 2000 space patrol
-      this.moveCount++;
-      if (this.moveCount % 100 === 0) {
-        this.direction = this.direction === "right" ? "left" : "right";
-        this.moveCount = 0;
-      }
-      if (this.direction === "right") {
-        this.flipX = false;
-        this.move(100, 0);
-      } else {
-        this.flipX = true;
-        this.move(-100, 0);
-      }
-    },
-    squash() {
-      burp();
-      this.isAlive = false;
-      this.stop();
-      destroy(this);
-    },
-  };
-}
-
-function patrol({ size = 5, speed = 1.0, direction = "right" }) {
-  const banana = ["right", "left"].includes(direction) ? "x" : "y";
-  return {
-    id: "patrol",
-    require: ["pos", "area", "body", "sprite"],
-    isAlive: true,
-    direction,
-    flipDirection() {
-      console.log(this);
-      if (this.direction === "right") {
-        this.direction = "left";
-      } else if (this.direction === "left") {
-        this.direction = "right";
-      } else if (this.direction === "up") {
-        this.direction = "down";
-      } else if (this.direction === "down") {
-        this.direction = "up";
-      }
-    },
-    update() {
-      if (!this.isAlive) {
-        return;
-      }
-
-      if (this.direction === "right") {
-        this.flipX = false;
-        this.move(this.width * speed, 0);
-        if (this.pos.x > this.startingX + this.width * size) {
-          this.flipDirection();
-        }
-      } else {
-        this.flipX = true;
-        this.move(-this.width * speed, 0);
-
-        if (this.pos.x < this.startingX - this.width * size) {
-          this.flipDirection();
-        }
-      }
-    },
-  };
-}
-
 const score = add([
   text("Score: 0"),
   pos(12, 12),
@@ -160,207 +84,221 @@ const healthBar = add([
   },
 ]);
 
-addLevel(
-  [
-    "=============================",
-    "=                      F   $=",
-    "=                          $=",
-    "=           $$         =   $=",
-    "=  %      ====         =   $=",
-    "=                      =    =",
-    "=   BM  ^^      = 0    =   E=",
-    "=============================",
-    "                           ",
-    "                           ",
-    "    $                      ",
-    "    =      $               ",
-    "           =       ^       ",
-    "                   =       ",
-    "   ^^^             0     ^^",
-    "===========================",
-    "                           ",
-    "                   $       ",
-    "    $              =       ",
-    "    =      $   =           ",
-    "           =       $       ",
-    "                   =       ",
-    "^^^^^^      $$$$      ^^^^^",
-    "===========================",
-  ],
-  {
-    // define the size of tile block
-    tileWidth: 32,
-    tileHeight: 32,
-    // define what each symbol means, by a function returning a component list (what will be passed to add())
-    tiles: {
-      B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
-      M: () => [
-        "moving-platform",
-        sprite("box"),
-        area(),
-        body({ isStatic: true }),
-        patrol({ size: 10, speed: 2.0 }),
-      ],
-      "=": () => [sprite("brick"), area(), body({ isStatic: true })],
-      $: () => ["gem", sprite("gem"), area(), pos(0, -9)],
-      "^": () => [sprite("spikes"), area(), "ouch"],
-      0: () => [sprite("bad-ball"), area(), "ouch", body(), enemy()],
-      F: () => [
-        sprite("flying-fish", { anim: "fly" }),
-        area(),
-        "ouch",
-        body({
-          gravityScale: 0,
-        }),
-        enemy(),
-        "flying-fish",
-      ],
-      E: () => [
-        "end-flag",
-        sprite("end-flag"),
-        area(),
-        body({ isStatic: true }),
-      ],
-    },
-  }
-);
-const player = add([
-  "player",
-  sprite("sam"),
-  health(healthBar.value),
-  pos(32, 0),
-  area(),
-  body(),
-]);
-player._current = "sam";
-player.play("idle");
-
 setGravity(1600);
 
-onCollide("player", "gem", (_, gem) => {
-  play("ding");
-  console.log("You got a gem!");
-  score.value++;
-  score.text = "Score: " + score.value;
-  destroy(gem);
-});
-
-player.on("hurt", () => {
-  play("ow");
-  console.log("Ouch!");
-});
-
-player.on("death", () => {
-  console.log("Game Over!");
-  destroy(player);
-
-  add([text("Game Over!"), pos(width() / 2, height() / 2)]);
-});
-
-let canSquash = false;
-
-onUpdate(() => {
-  if (player.isGrounded()) {
-    canSquash = false;
-  }
-});
-
-player.onGround(() => {
-  console.log("On the ground!");
-  if (!isKeyDown("left") && !isKeyDown("right")) {
-    player.play("idle");
-  } else {
-    player.play("run");
-  }
-});
-
-player.onUpdate(() => {
-  if (player.pos.x < 0) {
-    player.pos.x = 0;
-  }
-  // if (player.pos.x > lastFloor.pos.x) {
-  //   player.pos.x = lastFloor.pos.x;
-  // }
-  console.log(player.pos.x);
-  camPos(player.pos);
-});
-
-onCollide("player", "ouch", (_, ouch) => {
-  if (ouch.isAlive && canSquash && ouch.squash) {
-    ouch.squash();
-  } else {
-    if (player._current === "ezra") {
-      return;
-    }
-    player.hurt(1);
+function setupPlayer(player) {
+  player.on("hurt", () => {
+    play("ow");
     healthBar.value--;
     healthBar.text = "Health: " + healthBar.value;
-  }
-});
+  });
 
-onCollide("box", "player", (box, player) => {
-  if (player.pos.y < box.pos.y) {
-    add([
-      "gem",
-      sprite("gem"),
-      area(),
-      pos(box.pos.x + (Math.random() > 0.5 ? 50 : -50), box.pos.y),
-      "gem",
-    ]);
-    play("box-break");
-    destroy(box);
-  }
-});
+  player.on("death", () => {
+    destroy(player);
 
-onCollide("player", "end-flag", () => {
-  alert("You win!");
-});
+    add([text("Game Over!"), pos(width() / 2, height() / 2)]);
+  });
 
-// on key events
-onKeyPress("space", () => {
-  if (player._current === "sam" && player.isGrounded()) {
-    player.play("jump");
-    player.jump();
-    canSquash = true;
-  }
-});
-
-onKeyDown("right", () => {
-  player.flipX = false;
-  player.move(400, 0);
-  if (player.isGrounded() && player.curAnim() !== "run") {
-    player.play("run");
-  }
-});
-
-onKeyDown("left", () => {
-  player.flipX = true;
-  player.move(-400, 0);
-  if (player.isGrounded() && player.curAnim() !== "run") {
-    player.play("run");
-  }
-});
-
-["left", "right"].forEach((key) => {
-  onKeyRelease(key, () => {
-    // Only reset to "idle" if player is not holding any of these keys
-    if (player.isGrounded() && !isKeyDown("left") && !isKeyDown("right")) {
+  player.onGround(() => {
+    if (!isKeyDown("left") && !isKeyDown("right")) {
       player.play("idle");
+    } else {
+      player.play("run");
     }
   });
-});
 
-// Switch between characters
-onKeyPress("shift", () => {
-  const anim = player.curAnim();
+  player.onUpdate(() => {
+    if (player.pos.x < 0) {
+      player.pos.x = 0;
+    }
+    camPos(player.pos);
+  });
 
-  if (player._current === "sam") {
-    player.use(sprite("ezra"));
-    player._current = "ezra";
-  } else {
-    player.use(sprite("sam"));
-    player._current = "sam";
-  }
+  // on key events
+  onKeyPress("space", () => {
+    if (player.current === "sam" && player.isGrounded()) {
+      player.play("jump");
+      player.jump();
+    }
+  });
 
-  player.play(anim);
-});
+  onKeyDown("right", () => {
+    player.flipX = false;
+    player.move(400, 0);
+    if (player.isGrounded() && player.curAnim() !== "run") {
+      player.play("run");
+    }
+  });
+
+  onKeyDown("left", () => {
+    player.flipX = true;
+    player.move(-400, 0);
+    if (player.isGrounded() && player.curAnim() !== "run") {
+      player.play("run");
+    }
+  });
+
+  ["left", "right"].forEach((key) => {
+    onKeyRelease(key, () => {
+      // Only reset to "idle" if player is not holding any of these keys
+      if (player.isGrounded() && !isKeyDown("left") && !isKeyDown("right")) {
+        player.play("idle");
+      }
+    });
+  });
+
+  // Switch between characters
+  onKeyPress("shift", () => {
+    const anim = player.curAnim();
+    const flipX = player.flipX;
+
+    if (player.current === "sam") {
+      player.use(sprite("ezra"));
+      player.current = "ezra";
+    } else {
+      player.use(sprite("sam"));
+      player.current = "sam";
+    }
+
+    player.play(anim);
+    player.flipX = flipX;
+  });
+}
+
+function setupCollisions() {
+  onCollide("player", "gem", (_, gem) => {
+    play("ding");
+    score.value++;
+    score.text = "Score: " + score.value;
+    destroy(gem);
+  });
+
+  onCollide("player", "box", (player, box) => {
+    if (player.pos.y < box.pos.y) {
+      add([
+        "gem",
+        sprite("gem"),
+        area(),
+        pos(box.pos.x + (Math.random() > 0.5 ? 50 : -50), box.pos.y),
+        "gem",
+      ]);
+      play("box-break");
+      destroy(box);
+    }
+  });
+
+  onCollide("player", "end-flag", () => {
+    console.log("You win!");
+  });
+}
+
+const scenes = {
+  first: () => {
+    const level = addLevel(
+      [
+        "=============================",
+        "=                      F   $=",
+        "=                          $=",
+        "=           $$         =   $=",
+        "= %       ====         =   $=",
+        "=                      =    =",
+        "=   B   ^^      = 0    =   E=",
+        "=============================",
+        "                           ",
+        "                           ",
+        "    $                      ",
+        "    =      $               ",
+        "           =       ^       ",
+        "                   =       ",
+        "   ^^^             0     ^^",
+        "===========================",
+        "                           ",
+        "                   $       ",
+        "    $              =       ",
+        "    =      $   =           ",
+        "           =       $       ",
+        "                   =       ",
+        "^^^^^^      $$$$      ^^^^^",
+        "===========================",
+      ],
+      {
+        // define the size of tile block
+        tileWidth: 32,
+        tileHeight: 32,
+        // define what each symbol means, by a function returning a component list (what will be passed to add())
+        tiles: {
+          "%": () => [
+            "player",
+            sprite("sam"),
+            health(healthBar.value),
+            pos(),
+            area(),
+            body(),
+            { current: "sam" },
+          ],
+          B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
+          "=": () => [sprite("brick"), area(), body({ isStatic: true })],
+          $: () => ["gem", sprite("gem"), area()],
+          "^": () => [
+            sprite("spikes"),
+            area(),
+            body({ isStatic: true }),
+            components.danger({ directions: "T" }),
+          ],
+          0: () => [
+            sprite("bad-ball"),
+            area(),
+            body(),
+            components.patrol({}),
+            components.stomp({}),
+            components.danger({ directions: "BLR" }),
+          ],
+          F: () => [
+            sprite("flying-fish", { anim: "fly" }),
+            area(),
+            body({
+              gravityScale: 0,
+            }),
+            "flying-fish",
+            components.alternate(60, 100, [1, 0]),
+            components.stomp({}),
+            components.danger({ directions: "BLR" }),
+          ],
+          E: () => [
+            "end-flag",
+            sprite("end-flag"),
+            area(),
+            body({ isStatic: true }),
+          ],
+        },
+      }
+    );
+    const [player] = level.get("player");
+    setupPlayer(player);
+    setupCollisions();
+  },
+  test: () => {
+    add([
+      "platform",
+      sprite("brick"),
+      area(),
+      pos(0, 0),
+      body({ isStatic: true }),
+      components.alternate(),
+    ]);
+    add([
+      "platform",
+      sprite("brick"),
+      area(),
+      pos(100, 100),
+      body({ isStatic: true }),
+      components.alternate({ dir: [0, 1] }),
+    ]);
+  },
+};
+
+for (const [name, fn] of Object.entries(scenes)) {
+  scene(name, fn);
+}
+
+go("first");
