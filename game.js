@@ -86,6 +86,27 @@ const healthBar = add([
 
 setGravity(1600);
 
+class SceneHandler {
+  currentScene;
+
+  next() {
+    switch (this.currentScene) {
+      case "first":
+        this.currentScene = "second";
+        break;
+      case "second":
+        this.currentScene = "third";
+        break;
+      default:
+        this.currentScene = "first";
+        break;
+    }
+    go(this.currentScene);
+  }
+}
+
+const sceneHandler = new SceneHandler();
+
 function setupPlayer(player) {
   player.on("hurt", () => {
     play("ow");
@@ -188,94 +209,116 @@ function setupCollisions() {
   });
 
   onCollide("player", "end-flag", () => {
-    console.log("You win!");
+    sceneHandler.next();
   });
+}
+
+const sharedLevelConfig = {
+  // define the size of tile block
+  tileWidth: 32,
+  tileHeight: 32,
+  // define what each symbol means, by a function returning a component list (what will be passed to add())
+  tiles: {
+    "%": () => [
+      "player",
+      sprite("sam"),
+      health(healthBar.value),
+      pos(),
+      area(),
+      body(),
+      { current: "sam" },
+    ],
+    B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
+    "=": () => [sprite("brick"), area(), body({ isStatic: true })],
+    $: () => ["gem", sprite("gem"), area()],
+    "^": () => [
+      sprite("spikes"),
+      area(),
+      body({ isStatic: true }),
+      components.danger({ directions: "T" }),
+    ],
+    0: () => [
+      sprite("bad-ball"),
+      area(),
+      body(),
+      components.patrol({}),
+      components.stomp({}),
+      components.danger({ directions: "BLR" }),
+    ],
+    F: () => [
+      sprite("flying-fish", { anim: "fly" }),
+      area(),
+      body({
+        gravityScale: 0,
+      }),
+      "flying-fish",
+      components.alternate(60, 100, [1, 0]),
+      components.stomp({}),
+      components.danger({ directions: "BLR" }),
+    ],
+    E: () => ["end-flag", sprite("end-flag"), area(), body({ isStatic: true })],
+  },
+};
+
+function setupLevel(map) {
+  const level = addLevel(map, sharedLevelConfig);
+  const [player] = level.get("player");
+  setupPlayer(player);
+  setupCollisions();
 }
 
 const scenes = {
   first: () => {
-    const level = addLevel(
-      [
-        "=============================",
-        "=                      F   $=",
-        "=                          $=",
-        "=           $$         =   $=",
-        "= %       ====         =   $=",
-        "=                      =    =",
-        "=   B   ^^      = 0    =   E=",
-        "=============================",
-        "                           ",
-        "                           ",
-        "    $                      ",
-        "    =      $               ",
-        "           =       ^       ",
-        "                   =       ",
-        "   ^^^             0     ^^",
-        "===========================",
-        "                           ",
-        "                   $       ",
-        "    $              =       ",
-        "    =      $   =           ",
-        "           =       $       ",
-        "                   =       ",
-        "^^^^^^      $$$$      ^^^^^",
-        "===========================",
-      ],
-      {
-        // define the size of tile block
-        tileWidth: 32,
-        tileHeight: 32,
-        // define what each symbol means, by a function returning a component list (what will be passed to add())
-        tiles: {
-          "%": () => [
-            "player",
-            sprite("sam"),
-            health(healthBar.value),
-            pos(),
-            area(),
-            body(),
-            { current: "sam" },
-          ],
-          B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
-          "=": () => [sprite("brick"), area(), body({ isStatic: true })],
-          $: () => ["gem", sprite("gem"), area()],
-          "^": () => [
-            sprite("spikes"),
-            area(),
-            body({ isStatic: true }),
-            components.danger({ directions: "T" }),
-          ],
-          0: () => [
-            sprite("bad-ball"),
-            area(),
-            body(),
-            components.patrol({}),
-            components.stomp({}),
-            components.danger({ directions: "BLR" }),
-          ],
-          F: () => [
-            sprite("flying-fish", { anim: "fly" }),
-            area(),
-            body({
-              gravityScale: 0,
-            }),
-            "flying-fish",
-            components.alternate(60, 100, [1, 0]),
-            components.stomp({}),
-            components.danger({ directions: "BLR" }),
-          ],
-          E: () => [
-            "end-flag",
-            sprite("end-flag"),
-            area(),
-            body({ isStatic: true }),
-          ],
-        },
-      }
-    );
-    const [player] = level.get("player");
-    setupPlayer(player);
-    setupCollisions();
+    setupLevel([
+      "=============================",
+      "=                      F   $=",
+      "=                          $=",
+      "=           $$         =   $=",
+      "= %       ====         =   $=",
+      "=                      =    =",
+      "=   B   ^^      = 0    =   E=",
+      "=============================",
+      "                           ",
+      "                           ",
+      "    $                      ",
+      "    =      $               ",
+      "           =       ^       ",
+      "                   =       ",
+      "   ^^^             0     ^^",
+      "===========================",
+      "                           ",
+      "                   $       ",
+      "    $              =       ",
+      "    =      $   =           ",
+      "           =       $       ",
+      "                   =       ",
+      "^^^^^^      $$$$      ^^^^^",
+      "===========================",
+    ]);
+  },
+  second: () => {
+    setupLevel([
+      "=============================",
+      "=                      F   $=",
+      "=                          $=",
+      "=         ^^$$         =   $=",
+      "= %       ====         =   $=",
+      "=                      =    =",
+      "=                0     =   E=",
+      "=============================",
+    ]);
+  },
+  third: () => {
+    setupLevel([
+      "=============================",
+      "=     F F   $          F    $=",
+      "=         $$$$              $=",
+      "=         ^^$$         =    $=",
+      "= %       ====         =      ",
+      "=                      =     =",
+      "= $$$$$$$        0     =    E=",
+      "=============================",
+    ]);
   },
   test: () => {
     add([
@@ -301,4 +344,4 @@ for (const [name, fn] of Object.entries(scenes)) {
   scene(name, fn);
 }
 
-go("first");
+sceneHandler.next();

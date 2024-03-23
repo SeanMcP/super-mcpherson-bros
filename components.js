@@ -103,6 +103,7 @@ export function danger({ damage = 1, directions }) {
     add() {
       this.on("collide", (obj, col) => {
         if (obj.is("player") && isDangerous(col)) {
+          if (obj.current === "ezra") return;
           obj.hurt(damage);
         }
       });
