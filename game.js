@@ -97,6 +97,12 @@ class SceneHandler {
       case "second":
         this.currentScene = "third";
         break;
+      case "third":
+        this.currentScene = "four";
+        break;
+      case "four":
+        this.currentScene = "five";
+        break;
       default:
         this.currentScene = "first";
         break;
@@ -107,7 +113,7 @@ class SceneHandler {
 
 const sceneHandler = new SceneHandler();
 
-function setupPlayer(player) {
+function setupPlayer(player, endFloor) {
   player.on("hurt", () => {
     play("ow");
     healthBar.value--;
@@ -132,6 +138,11 @@ function setupPlayer(player) {
     if (player.pos.x < 0) {
       player.pos.x = 0;
     }
+
+    if (player.pos.x > endFloor.pos.x) {
+      player.pos.x = endFloor.pos.x;
+    }
+
     camPos(player.pos);
   });
 
@@ -230,6 +241,7 @@ const sharedLevelConfig = {
     ],
     B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
     "=": () => [sprite("brick"), area(), body({ isStatic: true })],
+    "]": () => ["end-floor", sprite("brick"), area(), body({ isStatic: true })],
     $: () => ["gem", sprite("gem"), area()],
     "^": () => [
       sprite("spikes"),
@@ -263,21 +275,21 @@ const sharedLevelConfig = {
 function setupLevel(map) {
   const level = addLevel(map, sharedLevelConfig);
   const [player] = level.get("player");
-  setupPlayer(player);
+  const [endFloor] = level.get("end-floor");
+  setupPlayer(player, endFloor);
   setupCollisions();
 }
 
 const scenes = {
   first: () => {
     setupLevel([
-      "=============================",
-      "=                      F   $=",
-      "=                          $=",
-      "=           $$         =   $=",
-      "= %       ====         =   $=",
-      "=                      =    =",
-      "=   B   ^^      = 0    =   E=",
-      "=============================",
+      "                       F   $",
+      "                           $",
+      "            $$         =   $",
+      "  %       ====         =   $",
+      "                       =    ",
+      "    B   ^^      = 0    =   E",
+      "============================]",
       "                           ",
       "                           ",
       "    $                      ",
@@ -298,26 +310,47 @@ const scenes = {
   },
   second: () => {
     setupLevel([
-      "=============================",
-      "=                      F   $=",
-      "=                          $=",
-      "=         ^^$$         =   $=",
-      "= %       ====         =   $=",
-      "=                      =    =",
-      "=                0     =   E=",
-      "=============================",
+      "                       F    $",
+      "                            $",
+      "          ^^$$         =    $",
+      "  %       ====         =    $",
+      "                       =     ",
+      "                 0     =    E",
+      "============================]",
     ]);
   },
   third: () => {
     setupLevel([
-      "=============================",
-      "=     F F   $          F    $=",
-      "=         $$$$              $=",
-      "=         ^^$$         =    $=",
-      "= %       ====         =      ",
-      "=                      =     =",
-      "= $$$$$$$        0     =    E=",
-      "=============================",
+      "      F F   $          F    $",
+      "          $$$$              $",
+      "          ^^$$         =    $",
+      "  %       ====         =     ",
+      "                       =     ",
+      "  $$$$$$$        0     =    E",
+      "============================]",
+    ]);
+  },
+  four: () => {
+    setupLevel([
+      "      F F   $          F    $",
+      "          $$$$              $",
+      "          ^^$$         =    $",
+      "  %       ====         =     ",
+      "                       =     ",
+      "  $$$$$$$        0     =    E",
+      "============================]",
+    ]);
+  },
+  five: () => {
+    setupLevel([
+      "      F F   $  FFF     F    $",
+      "          $$$$         0    $",
+      "          ^^$$         =    $",
+      "  %   F   ==============     ",
+      "         0     =    E        ",
+      "==========     =============]",
+      "                             ",
+      "          =====              ",
     ]);
   },
   test: () => {
