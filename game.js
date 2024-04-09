@@ -64,6 +64,8 @@ loadSprite("sam", "sprites/sam-2.png", {
 });
 loadSprite("spikes", "sprites/spikes.png");
 loadSprite("end-flag", "sprites/flag.png");
+loadSprite("blue-flower", "sprites/blue-flower.png");
+loadSprite("red-flower", "sprites/red-flower.png");
 
 // add
 setBackground(200, 200, 200);
@@ -116,6 +118,7 @@ const sceneHandler = new SceneHandler();
 function setupPlayer(player, endFloor) {
   player.on("hurt", () => {
     play("ow");
+    player.scale = vec2(1, 1);
     healthBar.value--;
     healthBar.text = "Health: " + healthBar.value;
   });
@@ -205,6 +208,18 @@ function setupCollisions() {
     destroy(gem);
   });
 
+  onCollide("player", "flower", (_, flower) => {
+    destroy(flower);
+  });
+
+  onCollide("player", "red-flower", (player) => {
+    player.scale = vec2(2, 2);
+  });
+
+  onCollide("player", "blue-flower", (player) => {
+    player.scale = vec2(0.5, 0.5);
+  });
+
   onCollide("player", "box", (player, box) => {
     if (player.pos.y < box.pos.y) {
       add([
@@ -269,6 +284,20 @@ const sharedLevelConfig = {
       components.danger({ directions: "BLR" }),
     ],
     E: () => ["end-flag", sprite("end-flag"), area(), body({ isStatic: true })],
+    R: () => [
+      "red-flower",
+      "flower",
+      sprite("red-flower"),
+      area(),
+      body({ isStatic: true }),
+    ],
+    b: () => [
+      "blue-flower",
+      "flower",
+      sprite("blue-flower"),
+      area(),
+      body({ isStatic: true }),
+    ],
   },
 };
 
@@ -285,9 +314,9 @@ const scenes = {
     setupLevel([
       "                       F   $",
       "                           $",
-      "            $$         =   $",
+      "          R $$         =   $",
       "  %       ====         =   $",
-      "                       =    ",
+      "                b      =    ",
       "    B   ^^      = 0    =   E",
       "============================]",
       "                           ",
