@@ -11,7 +11,8 @@ loadSound("ding", "sounds/ding.mp3");
 loadSound("ow", "sounds/ow.mp3");
 
 // load sprites
-loadSprite("brick", "sprites/brick.png");
+loadSprite("ground", "sprites/grass-block.png");
+loadSprite("dirt", "sprites/dirt-block.png");
 loadSprite("bad-ball", "sprites/bad-ball.png");
 loadSprite("box", "sprites/box.png");
 loadSprite("ezra", "sprites/ezra.png", {
@@ -255,8 +256,9 @@ const sharedLevelConfig = {
       { current: "sam" },
     ],
     B: () => ["box", sprite("box"), area(), body({ isStatic: true })],
-    "=": () => [sprite("brick"), area(), body({ isStatic: true })],
-    "]": () => ["end-floor", sprite("brick"), area(), body({ isStatic: true })],
+    "=": () => [sprite("ground"), area(), body({ isStatic: true })],
+    "|": () => [sprite("dirt"), area(), body({ isStatic: true })],
+    "]": () => ["end-floor", sprite("ground"), area(), body({ isStatic: true })],
     $: () => ["gem", sprite("gem"), area()],
     "^": () => [
       sprite("spikes"),
@@ -315,10 +317,10 @@ const scenes = {
       "                       F   $",
       "                           $",
       "          R $$         =   $",
-      "  %       ====         =   $",
-      "                b      =    ",
-      "    B   ^^      = 0    =   E",
-      "============================]",
+      "  %       ====         |   $",
+      "                b      |    ",
+      "    B   ^^      = 0    |   E",
+      "================|======|====]",
       "                           ",
       "                           ",
       "    $                      ",
